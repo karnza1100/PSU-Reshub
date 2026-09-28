@@ -15,7 +15,7 @@ export default function ResearchDashboard({ initialData = [] }) {
   
   const [startYear, setStartYear] = useState(2020);
   const [endYear, setEndYear] = useState(2025);
-  const [groupBy, setGroupBy] = useState('type'); // 'type' หรือ 'indexing'
+  const [groupBy, setGroupBy] = useState('type');
   const [tableSearch, setTableSearch] = useState('');
 
   // State สำหรับ Modal แสดงรายละเอียดผลงานเมื่อคลิกแท่งกราฟ
@@ -126,19 +126,16 @@ export default function ResearchDashboard({ initialData = [] }) {
     const clickedYear = data.year;
     const groupKey = groupBy === 'type' ? 'Type' : 'Indexing';
 
-    // คัดเลือกรายการผลงานที่ตรงกับปี และ Category นั้น
     const matchedItems = filteredData.filter(item => {
       const matchYear = item.Year === clickedYear;
       const matchCat = categoryName ? item[groupKey] === categoryName : true;
       return matchYear && matchCat;
     });
 
-    // อัปเดตตารางให้ค้นหาประเภทนั้นๆ อัตโนมัติ
     if (categoryName) {
       setTableSearch(categoryName);
     }
 
-    // แสดง Pop-up Modal ละเอียด
     setSelectedBarDetails({
       year: clickedYear,
       category: categoryName || 'ทุกประเภท',
@@ -146,17 +143,19 @@ export default function ResearchDashboard({ initialData = [] }) {
     });
   };
 
-  // 10. ฟังก์ชัน Export CSV
+  // 10. ฟังก์ชัน Export CSV (จัดเรียงหัวคอลัมน์ให้ตรงตาม Google Sheets เป๊ะๆ)
   const handleExportCSV = () => {
     if (filteredData.length === 0) return;
-    const headers = ["Staff name", "Type", "Detail", "Month", "Year", "Indexing"];
-    const rows = filteredData.map(item => [
+    const headers = ["No.", "Staff name", "Type", "Detail", "Month", "Year", "Indexing", "Is the author's affiliation with PSU?"];
+    const rows = filteredData.map((item, index) => [
+      `"${index + 1}"`,
       `"${item['Staff name'] || ''}"`,
       `"${item.Type || ''}"`,
       `"${(item.Detail || '').replace(/"/g, '""')}"`,
       `"${item.Month || ''}"`,
       `"${item.Year || ''}"`,
-      `"${item.Indexing || ''}"`
+      `"${item.Indexing || ''}"`,
+      `"${item["Is the author's affiliation with PSU?"] || item.IsPSU || ''}"`
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -430,7 +429,7 @@ export default function ResearchDashboard({ initialData = [] }) {
 
       </div>
 
-      {/* Publications Data Table */}
+      {/* Publications Data Table - เรียงหัวคอลัมน์ A ถึง H เป๊ะๆ */}
       <div className="bg-slate-900/90 p-6 rounded-2xl border border-slate-800 shadow-2xl relative z-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
           <div>
@@ -456,39 +455,60 @@ export default function ResearchDashboard({ initialData = [] }) {
           </div>
         </div>
 
-        <div className="overflow-x-auto max-h-96 overflow-y-auto border border-slate-800 rounded-xl">
+        <div className="overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-800 rounded-xl">
           <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-800 text-slate-200 sticky top-0 z-10">
+            <thead className="bg-slate-800 text-slate-200 sticky top-0 z-10 shadow-md">
               <tr>
-                <th className="p-3">ปี (ค.ศ.)</th>
-                <th className="p-3">อาจารย์ / นักวิจัย</th>
-                <th className="p-3">ประเภท</th>
-                <th className="p-3">รายละเอียดผลงาน</th>
-                <th className="p-3">Indexing</th>
+                <th className="p-3 whitespace-nowrap">ลำดับ</th>
+                <th className="p-3 whitespace-nowrap">อาจารย์ / นักวิจัย</th>
+                <th className="p-3 whitespace-nowrap">ประเภทผลงาน</th>
+                <th className="p-3 min-w-[350px]">รายละเอียดผลงาน (Detail)</th>
+                <th className="p-3 whitespace-nowrap">เดือน</th>
+                <th className="p-3 whitespace-nowrap">ปี (ค.ศ.)</th>
+                <th className="p-3 whitespace-nowrap">Indexing</th>
+                <th className="p-3 whitespace-nowrap">สังกัด ม.อ. (PSU Affiliation)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 bg-slate-900/50">
               {tableData.length > 0 ? (
-                tableData.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="p-3 font-medium text-cyan-400 whitespace-nowrap">{item.Year}</td>
-                    <td className="p-3 font-medium text-slate-100 whitespace-nowrap">{item['Staff name']}</td>
-                    <td className="p-3 whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                        {item.Type}
-                      </span>
-                    </td>
-                    <td className="p-3 max-w-md truncate text-slate-300" title={item.Detail}>{item.Detail}</td>
-                    <td className="p-3 whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        {item.Indexing || 'Others'}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                tableData.map((item, idx) => {
+                  const psuAffiliationRaw = item["Is the author's affiliation with PSU?"] || item.IsPSU || '';
+                  const isPsuAffiliation = psuAffiliationRaw.toString().trim().toUpperCase() === 'Y';
+
+                  return (
+                    <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="p-3 text-slate-500 font-mono whitespace-nowrap align-top">{idx + 1}</td>
+                      <td className="p-3 font-medium text-slate-100 whitespace-nowrap align-top">{item['Staff name']}</td>
+                      <td className="p-3 whitespace-nowrap align-top">
+                        <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium">
+                          {item.Type}
+                        </span>
+                      </td>
+                      <td className="p-3 text-slate-200 leading-relaxed font-normal align-top">
+                        {item.Detail}
+                      </td>
+                      <td className="p-3 text-slate-400 whitespace-nowrap align-top">{item.Month || '-'}</td>
+                      <td className="p-3 font-medium text-cyan-400 whitespace-nowrap align-top">{item.Year}</td>
+                      <td className="p-3 whitespace-nowrap align-top">
+                        <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+                          {item.Indexing || 'Others'}
+                        </span>
+                      </td>
+                      <td className="p-3 whitespace-nowrap align-top">
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                          isPsuAffiliation 
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                            : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                        }`}>
+                          {isPsuAffiliation ? '✓ PSU' : '✕ Non-PSU'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="5" className="p-6 text-center text-slate-500">
+                  <td colSpan="8" className="p-8 text-center text-slate-500">
                     ไม่พบข้อมูลผลงานวิชาการตามเงื่อนไขที่ระบุ
                   </td>
                 </tr>
@@ -498,7 +518,7 @@ export default function ResearchDashboard({ initialData = [] }) {
         </div>
       </div>
 
-      {/* POPUP MODAL แสดงรายละเอียดเมื่อกดแท่งกราฟ */}
+      {/* POPUP MODAL แสดงรายละเอียดเมื่อกดแท่งกราฟ - เพิ่มข้อมูลสังกัด PSU และสถานะ Indexing ชัดเจน */}
       {selectedBarDetails && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
@@ -511,8 +531,8 @@ export default function ResearchDashboard({ initialData = [] }) {
                 <h3 className="text-lg font-bold text-slate-100 mt-2">
                   {selectedBarDetails.category}
                 </h3>
-                <p className="text-xs text-slate-400">
-                  พบทั้งสิ้น {selectedBarDetails.items.length} รายการ
+                <p className="text-xs text-slate-400 mt-0.5">
+                  พบข้อมูลทั้งสิ้น {selectedBarDetails.items.length} รายการ
                 </p>
               </div>
               <button 
@@ -526,23 +546,41 @@ export default function ResearchDashboard({ initialData = [] }) {
             {/* Modal Content / Items List */}
             <div className="p-5 overflow-y-auto space-y-3 flex-1">
               {selectedBarDetails.items.length > 0 ? (
-                selectedBarDetails.items.map((item, idx) => (
-                  <div key={idx} className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 hover:border-cyan-500/40 transition-all">
-                    <div className="flex justify-between items-start gap-2 mb-2">
-                      <span className="text-xs font-semibold text-cyan-400">{item['Staff name']}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        {item.Indexing || 'Others'}
-                      </span>
+                selectedBarDetails.items.map((item, idx) => {
+                  const psuRaw = item["Is the author's affiliation with PSU?"] || item.IsPSU || '';
+                  const isPsu = psuRaw.toString().trim().toUpperCase() === 'Y';
+
+                  return (
+                    <div key={idx} className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 hover:border-cyan-500/40 transition-all">
+                      <div className="flex justify-between items-start gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-mono text-slate-500">#{idx + 1}</span>
+                          <span className="text-xs font-semibold text-cyan-400">{item['Staff name']}</span>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
+                            {item.Indexing || 'Others'}
+                          </span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded border font-semibold ${
+                            isPsu 
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
+                              : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                          }`}>
+                            {isPsu ? '✓ PSU Affiliation' : '✕ Non-PSU'}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-200 leading-relaxed font-normal">
+                        {item.Detail}
+                      </p>
+                      <div className="mt-2 text-[11px] text-slate-400 flex items-center gap-3">
+                        <span className="px-2 py-0.5 bg-slate-700/50 rounded text-slate-300">{item.Type}</span>
+                        {item.Month && <span>เดือนที่ตีพิมพ์: {item.Month}</span>}
+                        <span>ปี ค.ศ. {item.Year}</span>
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-200 leading-relaxed font-medium">
-                      {item.Detail}
-                    </p>
-                    <div className="mt-2 text-[11px] text-slate-400 flex items-center gap-2">
-                      <span className="px-2 py-0.5 bg-slate-700/50 rounded text-slate-300">{item.Type}</span>
-                      {item.Month && <span>เดือน: {item.Month}</span>}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-center text-slate-500 text-xs py-8">ไม่พบข้อมูลรายชื่อผลงาน</p>
               )}
