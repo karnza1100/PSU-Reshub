@@ -1,12 +1,10 @@
-import ResearchDashboard from '../components/ResearchDashboard';
-import { getResearchData } from '../lib/fetchResearchData';
+import ResearchDashboard from '@/components/ResearchDashboard';
+import { getResearchData } from '@/lib/fetchResearchData';
 
-export default async function HomePage() {
+// ตั้งค่าเพื่อไม่ให้ Vercel ทำ Caching ข้อมูลเก่าไว้
+export const revalidate = 0;
+
+export default async function Page() {
   const data = await getResearchData();
-
-  return (
-    <main className="container mx-auto">
-      <ResearchDashboard initialData={data} />
-    </main>
-  );
+  return <ResearchDashboard initialData={data} />;
 }
