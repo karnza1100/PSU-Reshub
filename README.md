@@ -46,6 +46,48 @@
 | **Git** | เวอร์ชันล่าสุด | [git-scm.com](https://git-scm.com/) |
 | **VSCode** | เวอร์ชันล่าสุด | [code.visualstudio.com](https://code.visualstudio.com/) |
 
+## 📊 การเปลี่ยน Google Sheet
+ใช้เมื่อ: ต้องการเปลี่ยนไปใช้ Google Sheet อันใหม่ หรืออัปเดตโครงสร้างข้อมูล
+
+## ⚠️ สิ่งสำคัญ: หัวคอลัมน์ต้องตรงเป๊ะ
+ไฟล์ Google Sheet ต้องกำหนดชื่อหัวคอลัมน์ (Header Row) ใน แถวที่ 1 ตามนี้ทุกตัวอักษร (คำนึงถึงตัวพิมพ์เล็ก-ใหญ่ และห้ามเว้นวรรค):
+ชื่อหัวข้อ (Header) : Staff name , Type , Detail ,  Month ,  Year ,  Indexing ,  Is the author's affiliation with PSU?
+
+## กรณีเปลี่ยนลิ้ง google sheet
+ให้เปลี่ยนในไฟล์ .env.local และนำลิ้งใหม่ไปเปลี่ยนแทน
+
+## ☁️ การ Deploy ขึ้น Vercel
+สำหรับการ Deploy ครั้งแรก
+Push โค้ดโปรเจกต์ขึ้น GitHub ของคุณ
+
+เข้าเว็บไซต์ vercel.com → เลือก Add New Project
+
+เลือก Repository ที่ต้องการเชื่อมต่อ
+
+ในส่วน Environment Variables ให้เพิ่มค่า:
+
+Key: NEXT_PUBLIC_GOOGLE_SHEET_URL
+
+Value: ลิงก์ CSV จาก Google Sheet
+
+Environments: เลือกทั้งหมด (Production, Preview, Development)
+
+กด Deploy
+
+## การอัปเดตครั้งต่อๆ ไป
+กรณีแก้โค้ดโปรเจกต์: ระบบ Vercel จะทำการ Deploy ให้อัตโนมัติทุกครั้งที่คุณ Push ขึ้น GitHub
+
+กรณีเปลี่ยนลิงก์ Google Sheet (Environment Variable):
+
+ต้องทำการ Redeploy ทุกครั้ง มิฉะนั้นข้อมูลจะไม่เปลี่ยนตาม
+
+ไปที่ Vercel Dashboard → เลือกโปรเจกต์ของคุณ
+
+ไปที่แท็บ Deployments → คลิกปุ่ม ... ที่ Deployment ล่าสุด
+
+เลือก Redeploy รอ 1-2 นาทีเป็นอันเสร็จสิ้น
+
+
 **ตรวจสอบเวอร์ชันใน Terminal:**
 ```bash
 node -v    # ควรได้ v18.17.0 ขึ้นไป
@@ -71,3 +113,5 @@ npm -v     # ควรได้ 9.0.0 ขึ้นไป
 ├── package.json                # รายการแพ็กเกจ Dependencies ทั้งหมด
 └── tailwind.config.js          # ไฟล์ตั้งค่า Tailwind CSS
 🔧 การแก้ไขปัญหาที่พบบ่อย❌ ปัญหา: รัน npm install แล้วขึ้น Error / ไม่ผ่านสาเหตุ: เวอร์ชัน Node.js ในเครื่องเก่าเกินไปวิธีแก้: อัปเดต Node.js เป็นเวอร์ชัน 18.17.0 ขึ้นไป จากนั้นลบโฟลเดอร์ node_modules และไฟล์ package-lock.json แล้วรัน npm install ใหม่อีกครั้ง❌ ปัญหา: เปิดเว็บใน Localhost แล้วข้อมูลไม่ออกสาเหตุ: ลิงก์ Google Sheet ผิด หรือไม่มีไฟล์ .env.localวิธีแก้: ตรวจสอบไฟล์ .env.local ว่าลิงก์ถูกต้องและลงท้ายด้วยรูปแบบการส่งออก CSV หรือไม่ รวมถึงเช็คว่าตั้งค่าสิทธิ์เป็น Public หรือยัง❌ ปัญหา: Deploy บน Vercel แล้วข้อมูลไม่ขึ้นตามที่แก้สาเหตุ: ยังไม่ได้กด Redeploy หลังจากเปลี่ยน Environment Variableวิธีแก้: ไปที่หน้า Vercel Dashboard ของโปรเจกต์ → แท็บ Deployments → กด ... แล้วเลือก Redeploy❌ ปัญหา: กราฟไม่แสดงข้อมูล หรือข้อมูลปีเพี้ยนสาเหตุ: คอลัมน์ Year ใน Google Sheet ไม่ใช่ตัวเลข ค.ศ.วิธีแก้: ตรวจสอบว่าคอลัมน์ปีเป็นตัวเลข ค.ศ. (เช่น 2024) ไม่ใช่ พ.ศ. และตรวจสอบหัวคอลัมน์ให้ตรงตามตารางคู่มือเป๊ะๆ
+
+
