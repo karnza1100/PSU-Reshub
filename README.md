@@ -4,7 +4,8 @@
 
 > ตัวอย่าง Website : https://psu-reshub.vercel.app/
 
-##⚠️ กรณีโหลดโค๊ดมาใช้ครั้งแรก ให้ไปแก้ไข .env.local อัพเดทใส่ลิ้ง google sheet ก่อน
+##⚠️ กรณีโหลดโค๊ดมาใช้ครั้งแรก ให้ไปแก้ไข .env.local อัพเดทใส่ลิ้ง google sheet ก่อน (ในส่วน vscode)
+## กรณีทำต่อใน vercel กรุณาอ่านรายละเอียดด้านล่าง
 
 ---
 
@@ -72,6 +73,8 @@ Push โค้ดโปรเจกต์ขึ้น GitHub ของคุณ
 Key: NEXT_PUBLIC_GOOGLE_SHEET_URL
 
 Value: ลิงก์ CSV จาก Google Sheet
+
+Type: เลือก Config (ไม่ใช่ Secret)
 
 Environments: เลือกทั้งหมด (Production, Preview, Development)
 
